@@ -1,0 +1,151 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Player {
+  id          String   @id @default(cuid())
+  name        String
+  avatarEmoji String
+  colorHex    String
+  pin         String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+}
+
+model Game {
+  id               String  @id @default(cuid())
+  name             String
+  bannerUrl        String
+  isAvailable1v1   Boolean @default(false)
+  isAvailableFFA   Boolean @default(false)
+  isAvailable2v2   Boolean @default(false)
+  isBO3Preferred   Boolean @default(false)
+  isLongGame       Boolean @default(false)
+  orderIndex       Int     @default(0)
+}
+
+model Tournament {
+  id          String           @id @default(cuid())
+  name        String
+  status      TournamentStatus
+  format      String           @default("round_robin_free")
+  pointSystem String           @default("{\"1st\":4,\"2nd\":3,\"3rd\":2,\"4th\":1,\"5th\":0}")
+  winnerId    String?
+  hostId      String
+  createdAt   DateTime         @default(now())
+  startedAt   DateTime?
+  finishedAt  DateTime?
+}
+
+model TournamentPlayer {
+  id            String   @id @default(cuid())
+  tournamentId  String
+  playerId      String
+  finalPosition Int?
+  joinedAt      DateTime @default(now())
+
+  @@unique([tournamentId, playerId])
+}
+
+model GameSession {
+  id           String            @id @default(cuid())
+  tournamentId String
+  gameId       String
+  type         MatchType
+  status       GameSessionStatus @default(active)
+  roundNumber  Int
+  createdAt    DateTime          @default(now())
+  finishedAt   DateTime?
+}
+
+model Match {
+  id            String      @id @default(cuid())
+  tournamentId  String
+  gameId        String
+  type          MatchType
+  status        MatchStatus
+  isMemeMatch   Boolean     @default(false)
+  roundNumber   Int
+  winnerId      String?
+  gameSessionId String?
+  createdAt     DateTime    @default(now())
+  startedAt     DateTime?
+  finishedAt    DateTime?
+}
+
+model MatchResult {
+  id               String   @id @default(cuid())
+  matchId          String
+  playerId         String
+  gameScore        Int?
+  tournamentPoints Int
+  placement        Int
+  teamId           String?
+  isConfirmed      Boolean  @default(false)
+  submittedAt      DateTime @default(now())
+  confirmedAt      DateTime?
+}
+
+model GameRating {
+  id         String   @id @default(cuid())
+  matchId    String
+  gameId     String
+  playerId   String
+  score      Int
+  comment    String?
+  isRevealed Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@unique([matchId, playerId])
+}
+
+model AuditLog {
+  id         String      @id @default(cuid())
+  matchId    String
+  action     AuditAction
+  playerId   String
+  resolvedBy String?
+  details    String      @default("{}")
+  createdAt  DateTime    @default(now())
+}
+
+enum TournamentStatus {
+  lobby
+  active
+  tiebreak
+  finished
+}
+
+enum MatchType {
+  v1v1
+  ffa
+  v2v2
+}
+
+enum MatchStatus {
+  pending
+  playing
+  rating
+  pending_validation
+  disputed
+  finished
+  cancelled
+}
+
+enum AuditAction {
+  RESULT_SUBMITTED
+  RESULT_CONFIRMED
+  DISPUTE_RAISED
+  ADMIN_RESOLVED
+  MATCH_CANCELLED
+}
+
+enum GameSessionStatus {
+  active
+  finished
+}
