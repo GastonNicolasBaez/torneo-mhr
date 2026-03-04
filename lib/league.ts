@@ -35,9 +35,10 @@ export async function finishLeagueSession(sessionId: string) {
     resultsByMatch[r.matchId].push(r);
   }
 
-  let pointSystem: Record<string, number> = { "1st": 4, "2nd": 3, "3rd": 2, "4th": 1, "5th": 0 };
+  type PointSystem = { "1st": number; "2nd": number; "3rd": number; "4th": number; "5th": number };
+  let pointSystem: PointSystem = { "1st": 4, "2nd": 3, "3rd": 2, "4th": 1, "5th": 0 };
   try {
-    pointSystem = JSON.parse(tournament.pointSystem);
+    pointSystem = JSON.parse(tournament.pointSystem) as PointSystem;
   } catch { /* use default */ }
 
   let tournamentPoints: { playerId: string; tournamentPoints: number; placement: number }[];

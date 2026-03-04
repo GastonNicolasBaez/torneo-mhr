@@ -28,7 +28,7 @@ export default function RootLayout({
   return (
     <html lang="es" className="dark">
       <body
-        className={`${rajdhani.variable} ${jetbrainsMono.variable} bg-zinc-950 text-zinc-100 antialiased`}
+        className={`${rajdhani.variable} ${jetbrainsMono.variable} bg-black text-zinc-100 antialiased`}
       >
         <PlayerProvider>
           {children}

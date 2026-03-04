@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCurrentPlayer } from "@/contexts/PlayerContext";
-import { ChevronLeft, Eye, Star } from "lucide-react";
 
 interface GameRating {
   id: string;
@@ -64,12 +63,10 @@ export default function RatingPage() {
     if (mRes.ok) {
       const mData = await mRes.json();
       if (mData.match?.gameId) {
-        fetch("/api/games")
-          .then((r) => r.json())
-          .then((gData) => {
-            const g = gData.games?.find((g: Game) => g.id === mData.match.gameId);
-            if (g) setGame(g);
-          });
+        fetch("/api/games").then((r) => r.json()).then((gData) => {
+          const g = gData.games?.find((g: Game) => g.id === mData.match.gameId);
+          if (g) setGame(g);
+        });
       }
     }
     if (tRes.ok) {
@@ -79,8 +76,6 @@ export default function RatingPage() {
   }, [matchId, tournamentId, currentPlayer?.id]);
 
   useEffect(() => { loadData(); }, [loadData]);
-
-  // Poll for reveals
   useEffect(() => {
     const interval = setInterval(loadData, 3000);
     return () => clearInterval(interval);
@@ -114,77 +109,53 @@ export default function RatingPage() {
     setIsRevealing(false);
   };
 
-  const StarButton = ({ value }: { value: number }) => (
-    <motion.button
-      whileHover={{ scale: 1.15 }}
-      whileTap={{ scale: 0.9 }}
-      onClick={() => !hasSubmitted && setMyScore(value)}
-      disabled={hasSubmitted}
-      className="disabled:cursor-default"
-    >
-      <Star
-        size={36}
-        fill={value <= myScore ? "#FF6B00" : "transparent"}
-        stroke={value <= myScore ? "#FF6B00" : "#3f3f46"}
-        className="transition-colors"
-      />
-    </motion.button>
-  );
-
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col">
+    <div className="min-h-screen bg-black flex flex-col">
       {/* Header */}
-      <div className="flex items-center gap-4 p-4 border-b border-zinc-800">
-        <button
-          onClick={() => router.push(`/tournament/${tournamentId}/match/${matchId}`)}
-          className="text-zinc-400 hover:text-zinc-100"
-        >
-          <ChevronLeft size={24} />
-        </button>
-        <h1
-          style={{ fontFamily: "var(--font-heading)", color: "#a78bfa" }}
-          className="text-xl font-bold tracking-wider"
-        >
-          CALIFICACIÓN
-        </h1>
-        {game && (
-          <span className="text-zinc-400 text-sm ml-auto">{game.name}</span>
-        )}
-      </div>
-
-      <div className="flex-1 flex flex-col items-center p-6 max-w-md mx-auto w-full gap-6">
-        {/* Game Banner */}
-        {game && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="w-full rounded-2xl overflow-hidden"
-            style={{ height: 120 }}
+      <header className="border-b border-white/10 px-6 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => router.push(`/tournament/${tournamentId}/match/${matchId}`)}
+            className="tech-label hover:text-white transition-colors"
           >
-            <img
-              src={game.bannerUrl}
-              alt={game.name}
-              className="w-full h-full object-cover"
-              onError={(e) => { (e.target as HTMLImageElement).src = `https://placehold.co/400x120/1a1a2e/a78bfa?text=${encodeURIComponent(game.name)}`; }}
-            />
-          </motion.div>
-        )}
+            ← VOLVER
+          </button>
+          <span className="text-white/20 text-xs">|</span>
+          <span className="tech-label" style={{ color: "#a78bfa" }}>▸ CALIFICACIÓN</span>
+        </div>
+        {game && <span className="terminal text-xs text-white/30">{game.name.toUpperCase()}</span>}
+      </header>
+
+      <div className="flex-1 flex flex-col items-center p-6 max-w-md mx-auto w-full gap-5">
 
         {/* My Rating */}
         {!isRevealed && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            className="w-full bg-zinc-900/80 border border-zinc-800 rounded-2xl p-6"
+            className="w-full hud-panel p-6"
           >
-            <p className="text-xs text-zinc-400 tracking-widest uppercase mb-4 text-center">
-              {hasSubmitted ? "Tu calificación" : "¿Cómo fue el juego?"}
+            <p className="tech-label mb-5 text-center">
+              {hasSubmitted ? "TU CALIFICACIÓN" : "¿CÓMO FUE EL JUEGO?"}
             </p>
 
-            {/* Star Rating */}
-            <div className="flex justify-center gap-2 mb-4">
+            {/* Score buttons */}
+            <div className="grid grid-cols-5 gap-1.5 mb-4">
               {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((v) => (
-                <StarButton key={v} value={v} />
+                <motion.button
+                  key={v}
+                  whileTap={{ scale: 0.92 }}
+                  onClick={() => !hasSubmitted && setMyScore(v)}
+                  disabled={hasSubmitted}
+                  className="py-2 border text-center transition-all disabled:cursor-default"
+                  style={{
+                    borderColor: v <= myScore ? "#a78bfa" : "rgba(255,255,255,0.08)",
+                    background: v <= myScore ? "rgba(167,139,250,0.1)" : "transparent",
+                    color: v <= myScore ? "#a78bfa" : "rgba(255,255,255,0.3)",
+                  }}
+                >
+                  <span className="terminal text-xs font-bold">{v}</span>
+                </motion.button>
               ))}
             </div>
 
@@ -194,13 +165,10 @@ export default function RatingPage() {
                 animate={{ opacity: 1 }}
                 className="text-center mb-4"
               >
-                <span
-                  className="text-5xl font-bold"
-                  style={{ fontFamily: "var(--font-mono)", color: "#FF6B00" }}
-                >
+                <span className="terminal text-5xl font-bold" style={{ color: "#a78bfa" }}>
                   {myScore}
                 </span>
-                <span className="text-zinc-500 text-xl">/10</span>
+                <span className="text-white/30 text-xl">/10</span>
               </motion.div>
             )}
 
@@ -209,21 +177,21 @@ export default function RatingPage() {
                 <textarea
                   value={myComment}
                   onChange={(e) => setMyComment(e.target.value)}
-                  placeholder="Comentario opcional... (entre amigos)"
+                  placeholder="Comentario opcional..."
                   rows={2}
-                  className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-purple-500 resize-none mb-4 transition-colors"
+                  className="w-full bg-black border border-white/10 px-4 py-3 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-[#a78bfa] resize-none mb-4 transition-colors terminal"
                 />
                 <button
                   onClick={handleSubmitRating}
                   disabled={isSubmitting || myScore === 0}
-                  className="w-full py-3 rounded-xl font-bold text-sm tracking-widest uppercase disabled:opacity-50"
+                  className="w-full py-3 font-bold text-sm tracking-widest uppercase transition-all disabled:opacity-30"
                   style={{
-                    background: "linear-gradient(135deg, #7c3aed, #a78bfa)",
-                    color: "white",
-                    boxShadow: "0 0 20px rgba(167,139,250,0.3)",
+                    background: myScore > 0 ? "#a78bfa" : "transparent",
+                    color: myScore > 0 ? "#000" : "#a78bfa",
+                    border: "1px solid #a78bfa",
                   }}
                 >
-                  {isSubmitting ? "Enviando..." : "⭐ Calificar"}
+                  {isSubmitting ? "ENVIANDO..." : "⭐ CALIFICAR"}
                 </button>
               </>
             )}
@@ -232,29 +200,30 @@ export default function RatingPage() {
               <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="text-center text-purple-400 text-sm"
+                className="terminal text-xs text-center"
+                style={{ color: "#a78bfa" }}
               >
-                ✓ Calificación enviada (oculta hasta la revelación)
+                ✓ CALIFICACIÓN ENVIADA — OCULTA HASTA LA REVELACIÓN
               </motion.p>
             )}
           </motion.div>
         )}
 
-        {/* Waiting for votes / Reveal */}
+        {/* Vote status + Reveal */}
         {!isRevealed && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="w-full bg-zinc-900/50 border border-zinc-800 rounded-xl p-4"
+            className="w-full hud-panel p-4"
           >
             <div className="flex items-center justify-between mb-3">
-              <p className="text-xs text-zinc-400 tracking-widest uppercase">Estado de votos</p>
-              <span className="text-sm font-bold" style={{ fontFamily: "var(--font-mono)" }}>
-                <span className="text-purple-400">{ratings.length}</span>
-                <span className="text-zinc-600">/{players.length}</span>
+              <p className="tech-label">ESTADO DE VOTOS</p>
+              <span className="terminal text-xs">
+                <span style={{ color: "#a78bfa" }}>{ratings.length}</span>
+                <span className="text-white/20">/{players.length}</span>
               </span>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-3 mb-4">
               {players.map((player) => {
                 const voted = ratings.some((r) => r.playerId === player.id);
                 return (
@@ -262,11 +231,10 @@ export default function RatingPage() {
                     key={player.id}
                     animate={voted ? { scale: [1, 1.2, 1] } : {}}
                     className="flex flex-col items-center gap-1"
-                    title={player.name}
                   >
-                    <span className="text-2xl">{player.avatarEmoji}</span>
-                    <span className={`text-xs ${voted ? "text-purple-400" : "text-zinc-600"}`}>
-                      {voted ? "✓" : "..."}
+                    <span className="text-xl">{player.avatarEmoji}</span>
+                    <span className="terminal text-xs" style={{ color: voted ? "#a78bfa" : "rgba(255,255,255,0.2)" }}>
+                      {voted ? "✓" : "·"}
                     </span>
                   </motion.div>
                 );
@@ -275,52 +243,45 @@ export default function RatingPage() {
             <button
               onClick={handleReveal}
               disabled={isRevealing}
-              className="w-full mt-4 py-3 rounded-xl font-bold text-sm tracking-widest uppercase border border-purple-500 text-purple-400 hover:bg-purple-500/10 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full py-3 font-bold text-sm tracking-widest uppercase border transition-all disabled:opacity-40"
+              style={{ borderColor: "#a78bfa", color: "#a78bfa" }}
             >
-              {isRevealing ? (
-                "Revelando..."
-              ) : (
-                <>
-                  <Eye size={16} /> Revelar Calificaciones
-                  {!allVoted && " (forzar)"}
-                </>
-              )}
+              {isRevealing ? "REVELANDO..." : `▸ REVELAR${!allVoted ? " (FORZAR)" : ""}`}
             </button>
           </motion.div>
         )}
 
-        {/* REVEALED RATINGS */}
+        {/* Revealed Ratings */}
         <AnimatePresence>
           {isRevealed && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="w-full space-y-4"
+              className="w-full flex flex-col gap-4"
             >
-              {/* Average score explosion */}
+              {/* Average score */}
               <motion.div
-                initial={{ opacity: 0, scale: 0.5 }}
+                initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ type: "spring", stiffness: 200, damping: 10 }}
-                className="text-center py-6 bg-zinc-900/80 border border-purple-500/30 rounded-2xl"
-                style={{ boxShadow: "0 0 40px rgba(167,139,250,0.2)" }}
+                transition={{ type: "spring", stiffness: 200 }}
+                className="hud-panel p-6 text-center"
+                style={{ borderColor: "rgba(167,139,250,0.4)" }}
               >
-                <p className="text-xs text-zinc-400 tracking-widest uppercase mb-2">Promedio</p>
+                <p className="tech-label mb-2">PROMEDIO FINAL</p>
                 <span
-                  className="text-7xl font-bold"
+                  className="terminal text-7xl font-bold"
                   style={{
-                    fontFamily: "var(--font-mono)",
                     color: "#a78bfa",
-                    textShadow: "0 0 30px rgba(167,139,250,0.5)",
+                    textShadow: "0 0 30px rgba(167,139,250,0.4)",
                   }}
                 >
                   {avgScore}
                 </span>
-                <span className="text-zinc-500 text-3xl">/10</span>
+                <span className="text-white/25 text-3xl">/10</span>
               </motion.div>
 
               {/* Individual ratings */}
-              <div className="space-y-3">
+              <div className="flex flex-col gap-1">
                 {ratings
                   .sort((a, b) => b.score - a.score)
                   .map((rating, index) => {
@@ -329,29 +290,23 @@ export default function RatingPage() {
                     return (
                       <motion.div
                         key={rating.id}
-                        initial={{ opacity: 0, x: -20 }}
+                        initial={{ opacity: 0, x: -16 }}
                         animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-4 flex items-center gap-4"
+                        transition={{ delay: index * 0.08 }}
+                        className="hud-panel px-4 py-3 flex items-center gap-3"
                       >
-                        <span className="text-2xl">{player.avatarEmoji}</span>
-                        <div className="flex-1">
-                          <p className="font-semibold text-sm" style={{ color: player.colorHex }}>
-                            {player.name}
+                        <span className="text-xl">{player.avatarEmoji}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="terminal text-xs font-bold" style={{ color: player.colorHex }}>
+                            {player.name.toUpperCase()}
                           </p>
                           {rating.comment && (
-                            <p className="text-xs text-zinc-400 mt-1 italic">"{rating.comment}"</p>
+                            <p className="text-xs text-white/30 mt-0.5 italic truncate">"{rating.comment}"</p>
                           )}
                         </div>
-                        <div className="flex items-center gap-1">
-                          <Star size={16} fill="#FF6B00" stroke="#FF6B00" />
-                          <span
-                            className="text-xl font-bold text-orange-400"
-                            style={{ fontFamily: "var(--font-mono)" }}
-                          >
-                            {rating.score}
-                          </span>
-                        </div>
+                        <span className="terminal text-xl font-bold" style={{ color: "#a78bfa" }}>
+                          {rating.score}
+                        </span>
                       </motion.div>
                     );
                   })}
@@ -359,14 +314,14 @@ export default function RatingPage() {
 
               <button
                 onClick={() => router.push(`/tournament/${tournamentId}`)}
-                className="w-full py-3 rounded-xl font-bold text-sm tracking-widest uppercase"
+                className="w-full py-4 font-bold text-sm tracking-widest uppercase transition-all"
                 style={{
-                  background: "linear-gradient(135deg, #FF6B00, #FF8C40)",
-                  color: "#09090b",
-                  boxShadow: "0 0 20px rgba(255,107,0,0.3)",
+                  background: "var(--accent-cyan)",
+                  color: "#000",
+                  border: "1px solid var(--accent-cyan)",
                 }}
               >
-                ← Volver al Dashboard
+                ← VOLVER AL DASHBOARD
               </button>
             </motion.div>
           )}

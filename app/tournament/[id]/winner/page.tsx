@@ -18,37 +18,23 @@ interface LeaderboardEntry {
   matchesPlayed: number;
 }
 
-const CONFETTI_COLORS = ["#FF6B00", "#00FF87", "#FFD700", "#FF4655", "#4E9AF1", "#a78bfa"];
+const CONFETTI_COLORS = ["var(--accent-cyan)", "#a78bfa", "#facc15", "var(--accent-red)", "#ffffff", "#60a5fa"];
 
 function Confetti() {
-  const pieces = Array.from({ length: 60 }, (_, i) => i);
+  const pieces = Array.from({ length: 50 }, (_, i) => i);
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden z-50">
       {pieces.map((i) => (
         <motion.div
           key={i}
-          initial={{
-            x: `${Math.random() * 100}vw`,
-            y: -20,
-            rotate: 0,
-            opacity: 1,
-          }}
-          animate={{
-            y: "110vh",
-            rotate: Math.random() * 720 - 360,
-            opacity: [1, 1, 0],
-          }}
-          transition={{
-            duration: 3 + Math.random() * 3,
-            delay: Math.random() * 2,
-            ease: "linear",
-          }}
+          initial={{ x: `${Math.random() * 100}vw`, y: -20, rotate: 0, opacity: 1 }}
+          animate={{ y: "110vh", rotate: Math.random() * 720 - 360, opacity: [1, 1, 0] }}
+          transition={{ duration: 3 + Math.random() * 3, delay: Math.random() * 2, ease: "linear" }}
           style={{
             position: "absolute",
-            width: 8 + Math.random() * 8,
-            height: 8 + Math.random() * 8,
+            width: 4 + Math.random() * 6,
+            height: 4 + Math.random() * 6,
             background: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
-            borderRadius: Math.random() > 0.5 ? "50%" : 2,
           }}
         />
       ))}
@@ -83,41 +69,48 @@ export default function WinnerPage() {
   }, [loadData]);
 
   const playerMap = Object.fromEntries(players.map((p) => [p.id, p]));
-
   const top3 = leaderboard.slice(0, 3);
   const rest = leaderboard.slice(3);
 
-  const podiumOrder = [1, 0, 2]; // 2nd, 1st, 3rd visual order
-  const podiumHeights = [200, 260, 160]; // heights for 2nd, 1st, 3rd
+  // 2nd, 1st, 3rd visual order
+  const podiumOrder = [1, 0, 2];
+  const podiumHeights = [180, 240, 140];
+  const podiumColors = [
+    "rgba(192,192,192,0.15)",
+    "rgba(0,240,255,0.1)",
+    "rgba(205,127,50,0.12)",
+  ];
+  const podiumBorders = [
+    "rgba(192,192,192,0.3)",
+    "rgba(0,240,255,0.4)",
+    "rgba(205,127,50,0.3)",
+  ];
+  const rankLabels = ["01", "02", "03"];
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-start pb-12 overflow-hidden">
+    <div className="min-h-screen bg-black flex flex-col items-center justify-start pb-12 overflow-hidden">
       {showConfetti && <Confetti />}
 
       {/* Header */}
       <motion.div
-        initial={{ opacity: 0, y: -30 }}
+        initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className="text-center pt-12 pb-8 px-6"
       >
-        <motion.div
-          animate={{ scale: [1, 1.05, 1] }}
-          transition={{ repeat: Infinity, duration: 3 }}
-          className="text-6xl mb-4"
-        >
-          🏆
-        </motion.div>
+        <p className="tech-label mb-3" style={{ color: "var(--accent-cyan)" }}>
+          ▸ RESULTADO FINAL
+        </p>
         <h1
-          className="text-4xl font-bold tracking-wider mb-2"
+          className="text-5xl font-bold tracking-widest"
           style={{
             fontFamily: "var(--font-heading)",
-            color: "#FFD700",
-            textShadow: "0 0 30px rgba(255,215,0,0.5)",
+            color: "var(--accent-cyan)",
+            textShadow: "0 0 40px rgba(0,240,255,0.3)",
           }}
         >
           {tournament?.name || "TORNEO"}
         </h1>
-        <p className="text-zinc-400 text-sm tracking-widest uppercase">Resultados Finales</p>
+        <div className="h-px w-32 mx-auto mt-4" style={{ background: "var(--accent-cyan)" }} />
       </motion.div>
 
       {/* Podium */}
@@ -125,7 +118,7 @@ export default function WinnerPage() {
         <div className="flex items-end gap-2 px-6 mb-10">
           {podiumOrder.map((rank, visualPos) => {
             const entry = top3[rank];
-            if (!entry) return <div key={visualPos} style={{ width: 100 }} />;
+            if (!entry) return <div key={visualPos} style={{ width: 96 }} />;
             const player = playerMap[entry.playerId];
             if (!player) return null;
             const height = podiumHeights[visualPos];
@@ -134,46 +127,40 @@ export default function WinnerPage() {
             return (
               <motion.div
                 key={entry.playerId}
-                initial={{ opacity: 0, y: 50 }}
+                initial={{ opacity: 0, y: 40 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 + visualPos * 0.2, type: "spring" }}
+                transition={{ delay: 0.3 + visualPos * 0.15, type: "spring", stiffness: 200 }}
                 className="flex flex-col items-center"
               >
+                {/* Player info above podium */}
                 <motion.div
-                  animate={rank === 0 ? { y: [0, -8, 0] } : {}}
-                  transition={{ repeat: Infinity, duration: 2 }}
+                  animate={rank === 0 ? { y: [0, -6, 0] } : {}}
+                  transition={{ repeat: Infinity, duration: 2.5 }}
                   className="flex flex-col items-center mb-2"
                 >
                   <span className="text-3xl mb-1">{player.avatarEmoji}</span>
-                  <span
-                    className="font-bold text-sm text-center max-w-20"
-                    style={{ color: player.colorHex }}
-                  >
-                    {player.name}
+                  <span className="terminal text-xs font-bold text-center max-w-20" style={{ color: player.colorHex }}>
+                    {player.name.toUpperCase()}
                   </span>
                   <span
-                    className="font-bold text-xl mt-1"
-                    style={{ fontFamily: "var(--font-mono)", color: "#FF6B00" }}
+                    className="terminal text-lg font-bold mt-1"
+                    style={{ color: rank === 0 ? "var(--accent-cyan)" : "rgba(255,255,255,0.7)" }}
                   >
                     {entry.totalScore}
                   </span>
                 </motion.div>
+
+                {/* Podium block */}
                 <div
-                  className="w-24 flex flex-col items-center justify-center rounded-t-xl border-t border-x"
+                  className="w-24 flex flex-col items-center justify-start pt-3 border-t border-x"
                   style={{
                     height,
-                    background:
-                      rank === 0
-                        ? "linear-gradient(to bottom, rgba(255,215,0,0.2), rgba(255,215,0,0.05))"
-                        : rank === 1
-                        ? "linear-gradient(to bottom, rgba(192,192,192,0.15), rgba(192,192,192,0.05))"
-                        : "linear-gradient(to bottom, rgba(205,127,50,0.15), rgba(205,127,50,0.05))",
-                    borderColor:
-                      rank === 0 ? "rgba(255,215,0,0.4)" : rank === 1 ? "rgba(192,192,192,0.3)" : "rgba(205,127,50,0.3)",
+                    background: podiumColors[visualPos],
+                    borderColor: podiumBorders[visualPos],
                   }}
                 >
-                  <span className="text-3xl">{medals[rank]}</span>
-                  <span className="text-lg font-bold text-zinc-400">#{rank + 1}</span>
+                  <span className="text-2xl">{medals[rank]}</span>
+                  <span className="terminal text-xs text-white/30 mt-1">#{rankLabels[rank]}</span>
                 </div>
               </motion.div>
             );
@@ -181,60 +168,61 @@ export default function WinnerPage() {
         </div>
       )}
 
-      {/* Rest of the table */}
-      <div className="w-full max-w-md px-6 space-y-2">
-        {rest.map((entry, index) => {
-          const player = playerMap[entry.playerId];
-          if (!player) return null;
-          return (
-            <motion.div
-              key={entry.playerId}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.8 + index * 0.1 }}
-              className="flex items-center gap-3 bg-zinc-900/60 border border-zinc-800 rounded-xl p-3"
-            >
-              <span className="text-zinc-500 font-mono w-6 text-center">#{index + 4}</span>
-              <span className="text-xl">{player.avatarEmoji}</span>
-              <span className="flex-1 font-semibold text-sm" style={{ color: player.colorHex }}>
-                {player.name}
-              </span>
-              <span
-                className="font-bold text-lg"
-                style={{ fontFamily: "var(--font-mono)", color: "#fafafa" }}
+      {/* Rest of table */}
+      {rest.length > 0 && (
+        <div className="w-full max-w-md px-6 flex flex-col gap-1">
+          {rest.map((entry, index) => {
+            const player = playerMap[entry.playerId];
+            if (!player) return null;
+            return (
+              <motion.div
+                key={entry.playerId}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.8 + index * 0.08 }}
+                className="flex items-center gap-3 border border-white/8 px-4 py-3"
               >
-                {entry.totalScore}
-              </span>
-            </motion.div>
-          );
-        })}
-      </div>
+                <span className="terminal text-xs text-white/30 w-6">#{index + 4}</span>
+                <span className="text-lg">{player.avatarEmoji}</span>
+                <span className="flex-1 terminal text-sm" style={{ color: player.colorHex }}>
+                  {player.name.toUpperCase()}
+                </span>
+                <span className="terminal text-sm font-bold text-white/70">
+                  {entry.totalScore}
+                </span>
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Actions */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.2 }}
-        className="mt-10 px-6 w-full max-w-md space-y-3"
-      >
-        <button
-          onClick={() => router.push(`/tournament/${tournamentId}/bracket`)}
-          className="w-full py-3 rounded-xl font-bold text-sm border border-zinc-700 text-zinc-300 hover:border-zinc-500 transition-colors"
+      <AnimatePresence>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.2 }}
+          className="mt-10 px-6 w-full max-w-md flex flex-col gap-2"
         >
-          📋 Ver Historial Completo
-        </button>
-        <button
-          onClick={() => router.push("/lobby")}
-          className="w-full py-3 rounded-xl font-bold text-sm tracking-widest uppercase"
-          style={{
-            background: "linear-gradient(135deg, #FF6B00, #FF8C40)",
-            color: "#09090b",
-            boxShadow: "0 0 20px rgba(255,107,0,0.3)",
-          }}
-        >
-          🎮 Nuevo Torneo
-        </button>
-      </motion.div>
+          <button
+            onClick={() => router.push(`/tournament/${tournamentId}/bracket`)}
+            className="w-full py-3 border border-white/15 tech-label hover:border-white/30 hover:text-white transition-colors"
+          >
+            VER HISTORIAL COMPLETO →
+          </button>
+          <button
+            onClick={() => router.push("/lobby")}
+            className="w-full py-4 font-bold text-sm tracking-widest uppercase transition-all"
+            style={{
+              background: "var(--accent-cyan)",
+              color: "#000",
+              border: "1px solid var(--accent-cyan)",
+            }}
+          >
+            ▸ NUEVO TORNEO
+          </button>
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }

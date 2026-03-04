@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ChevronLeft, CheckCircle, Clock, XCircle, AlertTriangle } from "lucide-react";
 
 interface Match {
   id: string;
@@ -28,14 +27,24 @@ interface Game {
   name: string;
 }
 
-const STATUS_ICONS: Record<string, React.ReactNode> = {
-  finished: <CheckCircle size={14} className="text-green-400" />,
-  playing: <Clock size={14} className="text-orange-400" />,
-  pending_validation: <Clock size={14} className="text-amber-400" />,
-  disputed: <AlertTriangle size={14} className="text-red-400" />,
-  cancelled: <XCircle size={14} className="text-zinc-500" />,
-  rating: <Clock size={14} className="text-purple-400" />,
-  pending: <Clock size={14} className="text-zinc-500" />,
+const STATUS_LABEL: Record<string, string> = {
+  finished: "DONE",
+  playing: "LIVE",
+  pending_validation: "VAR",
+  disputed: "DISPUTE",
+  cancelled: "VOID",
+  rating: "RATING",
+  pending: "PENDING",
+};
+
+const STATUS_COLOR: Record<string, string> = {
+  finished: "var(--accent-cyan)",
+  playing: "#ffffff",
+  pending_validation: "#facc15",
+  disputed: "var(--accent-red)",
+  cancelled: "#52525b",
+  rating: "#a78bfa",
+  pending: "#52525b",
 };
 
 export default function BracketPage() {
@@ -72,6 +81,8 @@ export default function BracketPage() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
+  void players; // used for future player display
+
   const finishedMatches = matches.filter((m) => m.status === "finished");
   const activeMatches = matches.filter((m) =>
     ["pending", "playing", "rating", "pending_validation", "disputed"].includes(m.status)
@@ -84,49 +95,40 @@ export default function BracketPage() {
   }, {});
 
   return (
-    <div className="min-h-screen bg-zinc-950 pb-8">
+    <div className="min-h-screen bg-black pb-8">
       {/* Header */}
-      <div className="flex items-center gap-4 p-4 border-b border-zinc-800 sticky top-0 bg-zinc-950/90 backdrop-blur z-10">
-        <button
-          onClick={() => router.push(`/tournament/${tournamentId}`)}
-          className="text-zinc-400 hover:text-zinc-100"
-        >
-          <ChevronLeft size={24} />
-        </button>
-        <h1
-          style={{ fontFamily: "var(--font-heading)", color: "#FF6B00" }}
-          className="text-xl font-bold tracking-wider"
-        >
-          HISTORIAL
-        </h1>
-        <span className="text-zinc-500 text-sm ml-auto">
-          {finishedMatches.length} partidas jugadas
-        </span>
-      </div>
+      <header className="border-b border-white/10 px-6 py-3 flex items-center justify-between sticky top-0 bg-black/90 z-10">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => router.push(`/tournament/${tournamentId}`)}
+            className="tech-label hover:text-white transition-colors"
+          >
+            ← VOLVER
+          </button>
+          <span className="text-white/20 text-xs">|</span>
+          <span className="tech-label" style={{ color: "var(--accent-cyan)" }}>▸ HISTORIAL</span>
+        </div>
+        <span className="terminal text-xs text-white/30">{finishedMatches.length} JUGADAS</span>
+      </header>
 
-      <div className="max-w-2xl mx-auto p-4 space-y-6">
-        {/* Summary Stats */}
+      <div className="max-w-2xl mx-auto p-6 space-y-6">
+
+        {/* Summary stats */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           className="grid grid-cols-3 gap-3"
         >
           {[
-            { label: "Total", value: matches.length, color: "#FF6B00" },
-            { label: "Jugadas", value: finishedMatches.length, color: "#00FF87" },
-            { label: "Activas", value: activeMatches.length, color: "#f59e0b" },
+            { label: "TOTAL", value: matches.length, color: "var(--accent-cyan)" },
+            { label: "JUGADAS", value: finishedMatches.length, color: "rgba(255,255,255,0.7)" },
+            { label: "ACTIVAS", value: activeMatches.length, color: "#facc15" },
           ].map((stat) => (
-            <div
-              key={stat.label}
-              className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-4 text-center"
-            >
-              <p
-                className="text-2xl font-bold"
-                style={{ fontFamily: "var(--font-mono)", color: stat.color }}
-              >
+            <div key={stat.label} className="hud-panel p-4 text-center">
+              <p className="terminal text-2xl font-bold" style={{ color: stat.color }}>
                 {stat.value}
               </p>
-              <p className="text-xs text-zinc-500 mt-1 uppercase tracking-widest">{stat.label}</p>
+              <p className="tech-label mt-1">{stat.label}</p>
             </div>
           ))}
         </motion.div>
@@ -140,29 +142,33 @@ export default function BracketPage() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
             >
-              <p className="text-xs text-zinc-500 tracking-widest uppercase mb-3 flex items-center gap-2">
-                <span className="w-6 h-px bg-zinc-700" />
-                Ronda {round}
-                <span className="w-6 h-px bg-zinc-700" />
-              </p>
-              <div className="space-y-2">
+              <div className="flex items-center gap-3 mb-3">
+                <span className="tech-label">RONDA {round}</span>
+                <div className="flex-1 h-px bg-white/8" />
+                <span className="terminal text-xs text-white/20">{roundMatches.length}</span>
+              </div>
+
+              <div className="flex flex-col gap-1">
                 {roundMatches.map((match) => (
                   <motion.button
                     key={match.id}
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
-                    onClick={() =>
-                      router.push(`/tournament/${tournamentId}/match/${match.id}`)
-                    }
-                    className="w-full flex items-center gap-3 p-4 bg-zinc-900/60 border border-zinc-800 rounded-xl hover:border-zinc-600 transition-colors text-left"
+                    whileHover={{ x: 2 }}
+                    onClick={() => router.push(`/tournament/${tournamentId}/match/${match.id}`)}
+                    className="w-full flex items-center gap-3 px-4 py-3 border border-white/8 hover:border-white/20 transition-colors text-left"
                   >
-                    {STATUS_ICONS[match.status] || STATUS_ICONS.pending}
+                    {/* Status bar */}
+                    <span
+                      className="w-1 h-4 flex-shrink-0"
+                      style={{ background: STATUS_COLOR[match.status] ?? "#52525b" }}
+                    />
+
+                    {/* Game name */}
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-sm text-zinc-200 truncate">
-                        {games[match.gameId]?.name || "Juego"}
-                        {match.isMemeMatch && " 🎭"}
+                      <p className="text-sm text-white/80 truncate">
+                        {games[match.gameId]?.name ?? "—"}
+                        {match.isMemeMatch ? " 🎭" : ""}
                       </p>
-                      <p className="text-xs text-zinc-500 mt-0.5">
+                      <p className="terminal text-xs text-white/25 mt-0.5">
                         {match.type.toUpperCase()} •{" "}
                         {new Date(match.createdAt).toLocaleString("es-AR", {
                           month: "short",
@@ -172,24 +178,13 @@ export default function BracketPage() {
                         })}
                       </p>
                     </div>
+
+                    {/* Status label */}
                     <span
-                      className="text-xs uppercase font-medium px-2 py-1 rounded"
-                      style={{
-                        background:
-                          match.status === "finished"
-                            ? "rgba(0,255,135,0.1)"
-                            : match.status === "cancelled"
-                            ? "rgba(107,114,128,0.1)"
-                            : "rgba(255,107,0,0.1)",
-                        color:
-                          match.status === "finished"
-                            ? "#00FF87"
-                            : match.status === "cancelled"
-                            ? "#6b7280"
-                            : "#FF6B00",
-                      }}
+                      className="terminal text-xs w-16 text-right flex-shrink-0"
+                      style={{ color: STATUS_COLOR[match.status] ?? "#52525b" }}
                     >
-                      {match.status.replace("_", " ")}
+                      {STATUS_LABEL[match.status] ?? match.status}
                     </span>
                   </motion.button>
                 ))}
@@ -199,8 +194,8 @@ export default function BracketPage() {
 
         {matches.length === 0 && (
           <div className="text-center py-16">
-            <p className="text-zinc-600 text-4xl mb-4">🎮</p>
-            <p className="text-zinc-500">Sin partidas todavía. ¡Girá la ruleta!</p>
+            <p className="tech-label mb-2">SIN PARTIDAS</p>
+            <p className="text-white/20 text-xs">Girá la ruleta para empezar</p>
           </div>
         )}
       </div>

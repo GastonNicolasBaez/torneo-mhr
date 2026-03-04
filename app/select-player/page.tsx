@@ -38,7 +38,6 @@ export default function SelectPlayerPage() {
     if (!selectedPlayer) return;
     setIsLoading(true);
     setError("");
-
     try {
       const res = await fetch("/api/session", {
         method: "POST",
@@ -46,12 +45,7 @@ export default function SelectPlayerPage() {
         body: JSON.stringify({ playerId: selectedPlayer.id, pin }),
       });
       const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || "Error al iniciar sesión");
-        return;
-      }
-
+      if (!res.ok) { setError(data.error || "Error al iniciar sesión"); return; }
       setCurrentPlayer(data.player);
       router.push("/");
     } catch {
@@ -62,82 +56,73 @@ export default function SelectPlayerPage() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center p-6">
-      {/* Header */}
+    <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6">
+      {/* Wordmark */}
       <motion.div
-        initial={{ opacity: 0, y: -30 }}
+        initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="text-center mb-12"
+        transition={{ duration: 0.5 }}
+        className="text-center mb-14"
       >
+        <p className="tech-label mb-3" style={{ color: "var(--accent-cyan)" }}>
+          ▸ SISTEMA DE IDENTIFICACIÓN
+        </p>
         <h1
-          className="text-5xl font-bold tracking-wider mb-3"
-          style={{
-            fontFamily: "var(--font-heading)",
-            color: "#FF6B00",
-            textShadow: "0 0 20px rgba(255, 107, 0, 0.5)",
-          }}
+          className="text-6xl font-bold tracking-widest"
+          style={{ fontFamily: "var(--font-heading)", color: "#ffffff" }}
         >
-          TORNEO MHR
+          TORNEO MAHURA
         </h1>
-        <p className="text-zinc-400 text-lg tracking-widest uppercase">
-          Liga de Videojuegos entre Amigos
+        <div className="h-px w-32 mx-auto mt-4" style={{ background: "var(--accent-cyan)" }} />
+        <p className="tech-label mt-3 tracking-[0.2em]" style={{ color: "rgba(255,255,255,0.45)" }}>
+          GAMER DEL AÑO
         </p>
       </motion.div>
 
-      {/* Player Grid */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2 }}
-        className="w-full max-w-2xl"
+        className="w-full max-w-xl"
       >
-        <p className="text-zinc-400 text-center mb-6 text-sm tracking-widest uppercase">
-          ¿Quién sos?
-        </p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
-          {players.map((player, index) => (
-            <motion.button
-              key={player.id}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.1 }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => handleSelectPlayer(player)}
-              className={`
-                relative rounded-xl p-5 border-2 transition-all duration-300 flex flex-col items-center gap-3
-                ${
-                  selectedPlayer?.id === player.id
-                    ? "border-orange-500 bg-orange-500/10"
-                    : "border-zinc-800 bg-zinc-900/80 hover:border-zinc-600"
-                }
-              `}
-            >
-              {selectedPlayer?.id === player.id && (
-                <motion.div
-                  layoutId="selected-ring"
-                  className="absolute inset-0 rounded-xl border-2 border-orange-500"
-                  style={{
-                    boxShadow: "0 0 20px rgba(255, 107, 0, 0.3)",
-                  }}
-                />
-              )}
-              <span className="text-4xl">{player.avatarEmoji}</span>
-              <span
-                className="font-semibold text-sm tracking-wide"
-                style={{ color: player.colorHex }}
+        <p className="tech-label text-center mb-6">SELECCIONAR JUGADOR</p>
+
+        {/* Player grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-8">
+          {players.map((player, i) => {
+            const isSelected = selectedPlayer?.id === player.id;
+            return (
+              <motion.button
+                key={player.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.06 }}
+                onClick={() => handleSelectPlayer(player)}
+                className="relative p-4 border text-left transition-all flex flex-col items-center gap-2"
+                style={{
+                  borderColor: isSelected ? "var(--accent-cyan)" : "rgba(255,255,255,0.1)",
+                  background: isSelected ? "rgba(0,240,255,0.06)" : "rgba(10,10,10,0.6)",
+                }}
               >
-                {player.name}
-              </span>
-              {player.pin && (
-                <span className="text-xs text-zinc-500">🔒 PIN</span>
-              )}
-            </motion.button>
-          ))}
+                {/* Cyan corner accent when selected */}
+                {isSelected && (
+                  <motion.div
+                    layoutId="sel"
+                    className="absolute top-0 left-0 w-3 h-3"
+                    style={{ borderTop: "2px solid var(--accent-cyan)", borderLeft: "2px solid var(--accent-cyan)" }}
+                  />
+                )}
+                <span className="text-3xl">{player.avatarEmoji}</span>
+                <span className="terminal text-xs font-bold" style={{ color: isSelected ? "var(--accent-cyan)" : player.colorHex }}>
+                  {player.name.toUpperCase()}
+                </span>
+                {player.pin && <span className="tech-label" style={{ fontSize: "0.55rem" }}>🔒 PIN</span>}
+              </motion.button>
+            );
+          })}
         </div>
 
-        {/* PIN + Confirm */}
+        {/* PIN + Confirm panel */}
         <AnimatePresence>
           {selectedPlayer && (
             <motion.div
@@ -146,58 +131,50 @@ export default function SelectPlayerPage() {
               exit={{ opacity: 0, height: 0 }}
               className="overflow-hidden"
             >
-              <div className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-6 flex flex-col items-center gap-4">
+              <div className="hud-panel p-6 flex flex-col items-center gap-5">
                 <div className="flex items-center gap-3">
                   <span className="text-3xl">{selectedPlayer.avatarEmoji}</span>
-                  <span
-                    className="text-xl font-bold"
-                    style={{ color: selectedPlayer.colorHex }}
-                  >
-                    {selectedPlayer.name}
-                  </span>
+                  <div>
+                    <p className="tech-label" style={{ color: "var(--accent-cyan)" }}>IDENTIFICADO COMO</p>
+                    <p className="terminal text-lg font-bold" style={{ color: selectedPlayer.colorHex }}>
+                      {selectedPlayer.name.toUpperCase()}
+                    </p>
+                  </div>
                 </div>
 
                 {selectedPlayer.pin && (
                   <div className="w-full max-w-xs">
-                    <label className="block text-xs text-zinc-400 mb-2 tracking-widest uppercase">
-                      PIN (4 dígitos)
-                    </label>
+                    <p className="tech-label mb-2">CÓDIGO DE ACCESO</p>
                     <input
                       type="password"
                       inputMode="numeric"
                       maxLength={4}
                       value={pin}
-                      onChange={(e) =>
-                        setPin(e.target.value.replace(/\D/g, "").slice(0, 4))
-                      }
-                      placeholder="••••"
-                      className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-center text-xl tracking-[0.5em] text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-orange-500 transition-colors"
+                      onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                      placeholder="_ _ _ _"
+                      className="w-full bg-black border border-white/20 px-4 py-3 text-center terminal text-2xl tracking-[0.6em] text-white placeholder:text-white/20 focus:outline-none focus:border-[var(--accent-cyan)] transition-colors"
                       onKeyDown={(e) => e.key === "Enter" && handleConfirm()}
                     />
                   </div>
                 )}
 
                 {error && (
-                  <motion.p
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="text-red-400 text-sm"
-                  >
-                    {error}
+                  <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="terminal text-xs" style={{ color: "var(--accent-red)" }}>
+                    ✗ {error.toUpperCase()}
                   </motion.p>
                 )}
 
                 <button
                   onClick={handleConfirm}
                   disabled={isLoading || (!!selectedPlayer.pin && pin.length < 4)}
-                  className="w-full max-w-xs py-3 rounded-lg font-bold text-lg tracking-wider disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  className="w-full max-w-xs py-3 border font-bold text-sm tracking-widest uppercase transition-all disabled:opacity-30"
                   style={{
-                    background: isLoading ? "rgba(255,107,0,0.5)" : "#FF6B00",
-                    color: "#09090b",
-                    boxShadow: "0 0 20px rgba(255, 107, 0, 0.3)",
+                    borderColor: "var(--accent-cyan)",
+                    color: isLoading ? "var(--accent-cyan)" : "#000",
+                    background: isLoading ? "transparent" : "var(--accent-cyan)",
                   }}
                 >
-                  {isLoading ? "Entrando..." : "Entrar al Torneo"}
+                  {isLoading ? "VERIFICANDO..." : "CONFIRMAR ACCESO →"}
                 </button>
               </div>
             </motion.div>

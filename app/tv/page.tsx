@@ -39,7 +39,6 @@ export default function TVPage() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [ticker, setTicker] = useState<string[]>([]);
 
-  // Update time
   useEffect(() => {
     const interval = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(interval);
@@ -82,16 +81,15 @@ export default function TVPage() {
     return () => clearInterval(interval);
   }, [loadData]);
 
-  // Ticker messages
   useEffect(() => {
     const messages = [
-      "🎮 TORNEO MHR — Liga de Videojuegos entre Amigos",
-      "🎲 Round-Robin Libre — La ruleta decide el juego",
-      "⚡ Sistema VAR activo — Todos los resultados son verificados",
+      "TORNEO MHR — LIGA DE VIDEOJUEGOS ENTRE AMIGOS",
+      "ROUND-ROBIN LIBRE — LA RULETA DECIDE EL JUEGO",
+      "SISTEMA VAR ACTIVO — TODOS LOS RESULTADOS SON VERIFICADOS",
       ...(leaderboard[0]
-        ? [`🏆 Líder actual: ${players.find((p) => p.id === leaderboard[0]?.playerId)?.name || "?"} con ${leaderboard[0]?.totalScore} pts`]
+        ? [`LÍDER ACTUAL: ${players.find((p) => p.id === leaderboard[0]?.playerId)?.name?.toUpperCase() || "?"} — ${leaderboard[0]?.totalScore} PTS`]
         : []),
-      ...(recentMatch ? [`🎯 Última partida: ${games[recentMatch.gameId] || "..."} — ${recentMatch.type.toUpperCase()}`] : []),
+      ...(recentMatch ? [`ÚLTIMA PARTIDA: ${games[recentMatch.gameId]?.toUpperCase() || "..."} — ${recentMatch.type.toUpperCase()}`] : []),
     ];
     setTicker(messages);
   }, [leaderboard, players, recentMatch, games]);
@@ -100,101 +98,102 @@ export default function TVPage() {
 
   return (
     <div
-      className="min-h-screen bg-zinc-950 flex flex-col overflow-hidden"
-      style={{ fontFamily: "var(--font-heading)" }}
+      className="min-h-screen bg-black flex flex-col overflow-hidden"
+      style={{ fontFamily: "var(--font-mono)" }}
     >
       {/* Top bar */}
-      <div
+      <header
         className="flex items-center justify-between px-8 py-4 border-b"
-        style={{ borderColor: "rgba(255,107,0,0.3)", background: "rgba(255,107,0,0.05)" }}
+        style={{ borderColor: "rgba(0,240,255,0.2)", background: "rgba(0,240,255,0.03)" }}
       >
-        <h1
-          className="text-3xl font-bold tracking-widest"
-          style={{ color: "#FF6B00", textShadow: "0 0 20px rgba(255,107,0,0.5)" }}
-        >
-          TORNEO MHR
-        </h1>
-        {tournament && (
-          <span className="text-zinc-300 text-lg tracking-wider">{tournament.name}</span>
-        )}
-        <span
-          className="text-zinc-400 text-xl tracking-widest"
-          style={{ fontFamily: "var(--font-mono)" }}
-        >
+        <div className="flex items-center gap-4">
+          <span className="tech-label" style={{ color: "var(--accent-cyan)" }}>▸ TORNEO MHR</span>
+          {tournament && (
+            <>
+              <span className="text-white/20 text-xs">|</span>
+              <span className="tech-label">{tournament.name}</span>
+            </>
+          )}
+        </div>
+        <span className="terminal text-xl text-white/40">
           {currentTime.toLocaleTimeString("es-AR")}
         </span>
-      </div>
+      </header>
 
       {/* Main content */}
-      <div className="flex-1 flex items-center justify-center px-8 py-6">
+      <div className="flex-1 flex items-center justify-center px-8 py-8">
         {leaderboard.length === 0 ? (
           <motion.div
-            animate={{ opacity: [0.5, 1, 0.5] }}
+            animate={{ opacity: [0.4, 1, 0.4] }}
             transition={{ repeat: Infinity, duration: 3 }}
             className="text-center"
           >
-            <p className="text-6xl mb-4">🎮</p>
-            <p className="text-2xl text-zinc-400 tracking-widest">Esperando primera partida...</p>
+            <p className="tech-label mb-3" style={{ color: "var(--accent-cyan)" }}>▸ SISTEMA EN ESPERA</p>
+            <p className="terminal text-2xl text-white/20">ESPERANDO PRIMERA PARTIDA...</p>
           </motion.div>
         ) : (
-          <div className="w-full max-w-3xl space-y-4">
+          <div className="w-full max-w-3xl flex flex-col gap-3">
             {leaderboard.map((entry, index) => {
               const player = playerMap[entry.playerId];
               if (!player) return null;
-              const medals = ["🥇", "🥈", "🥉"];
               const isLeader = index === 0;
               const maxScore = leaderboard[0]?.totalScore || 1;
 
               return (
                 <motion.div
                   key={entry.playerId}
-                  initial={{ opacity: 0, x: -50 }}
+                  initial={{ opacity: 0, x: -40 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className={`relative rounded-2xl p-5 border overflow-hidden ${
-                    isLeader ? "border-orange-500/50" : "border-zinc-800"
-                  }`}
+                  transition={{ delay: index * 0.08 }}
+                  className="relative border overflow-hidden"
                   style={{
-                    background: isLeader
-                      ? "rgba(255,107,0,0.08)"
-                      : "rgba(24,24,27,0.8)",
-                    boxShadow: isLeader ? "0 0 30px rgba(255,107,0,0.15)" : "none",
+                    borderColor: isLeader ? "rgba(0,240,255,0.4)" : "rgba(255,255,255,0.08)",
+                    background: isLeader ? "rgba(0,240,255,0.04)" : "rgba(5,5,5,0.8)",
                   }}
                 >
-                  {/* Score bar */}
+                  {/* Score bar behind */}
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${(entry.totalScore / maxScore) * 100}%` }}
-                    transition={{ delay: 0.5 + index * 0.1, duration: 1 }}
-                    className="absolute inset-0 opacity-10"
-                    style={{ background: `linear-gradient(to right, ${player.colorHex}, transparent)` }}
+                    transition={{ delay: 0.5 + index * 0.08, duration: 1 }}
+                    className="absolute inset-y-0 left-0 opacity-8"
+                    style={{ background: player.colorHex }}
                   />
 
-                  <div className="relative flex items-center gap-6">
-                    <span className="text-4xl w-12 text-center">
-                      {medals[index] || `${index + 1}`}
+                  <div className="relative flex items-center gap-6 px-6 py-5">
+                    {/* Rank */}
+                    <span
+                      className="terminal text-2xl font-bold w-10 text-center"
+                      style={{ color: isLeader ? "var(--accent-cyan)" : "rgba(255,255,255,0.2)" }}
+                    >
+                      {String(index + 1).padStart(2, "0")}
                     </span>
+
+                    {/* Avatar */}
                     <span className="text-5xl">{player.avatarEmoji}</span>
+
+                    {/* Name + stats */}
                     <div className="flex-1">
                       <p
-                        className="text-3xl font-bold"
-                        style={{ color: player.colorHex }}
+                        className="text-3xl font-bold tracking-widest"
+                        style={{ fontFamily: "var(--font-heading)", color: player.colorHex }}
                       >
-                        {player.name}
+                        {player.name.toUpperCase()}
                       </p>
-                      <p className="text-zinc-400 text-sm mt-1">
-                        {entry.matchesPlayed} partidas • {entry.wins} victorias
+                      <p className="terminal text-sm text-white/25 mt-1">
+                        {entry.matchesPlayed} PARTIDAS &nbsp;·&nbsp; {entry.wins} VICTORIAS
                       </p>
                     </div>
+
+                    {/* Score */}
                     <motion.span
                       key={entry.totalScore}
-                      initial={{ scale: 1.3 }}
+                      initial={{ scale: 1.2 }}
                       animate={{ scale: 1 }}
-                      className="text-6xl font-bold"
+                      className="terminal text-6xl font-bold"
                       style={{
-                        fontFamily: "var(--font-mono)",
-                        color: isLeader ? "#FF6B00" : "#fafafa",
-                        textShadow: isLeader ? "0 0 20px rgba(255,107,0,0.4)" : "none",
+                        color: isLeader ? "var(--accent-cyan)" : "rgba(255,255,255,0.7)",
+                        textShadow: isLeader ? "0 0 30px rgba(0,240,255,0.3)" : "none",
                       }}
                     >
                       {entry.totalScore}
@@ -210,17 +209,17 @@ export default function TVPage() {
       {/* Ticker */}
       <div
         className="border-t py-3 px-4 overflow-hidden"
-        style={{ borderColor: "rgba(255,107,0,0.2)", background: "rgba(255,107,0,0.03)" }}
+        style={{ borderColor: "rgba(0,240,255,0.1)", background: "rgba(0,240,255,0.02)" }}
       >
         <AnimatePresence mode="wait">
           <motion.div
             key={ticker.join(",")}
             initial={{ x: "100%" }}
             animate={{ x: "-100%" }}
-            transition={{ duration: 20, ease: "linear" }}
-            className="whitespace-nowrap text-zinc-400 text-sm tracking-wider"
+            transition={{ duration: 25, ease: "linear" }}
+            className="whitespace-nowrap terminal text-xs text-white/30 tracking-widest"
           >
-            {ticker.join("   •   ")}
+            {ticker.join("   ▸   ")}
           </motion.div>
         </AnimatePresence>
       </div>

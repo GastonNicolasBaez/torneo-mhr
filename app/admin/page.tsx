@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useCurrentPlayer } from "@/contexts/PlayerContext";
-import { ChevronLeft, Edit, Check, X, Plus, Settings } from "lucide-react";
+import { Edit, Check, X } from "lucide-react";
 
 interface Player {
   id: string;
@@ -69,68 +69,78 @@ export default function AdminPage() {
     }
   };
 
+  const FLAG_LABELS: Record<string, string> = {
+    isAvailable1v1: "1V1",
+    isAvailableFFA: "FFA",
+    isAvailable2v2: "2V2",
+    isBO3Preferred: "BO3",
+    isLongGame: "LARGO",
+  };
+
   return (
-    <div className="min-h-screen bg-zinc-950 pb-8">
+    <div className="min-h-screen bg-black pb-8">
       {/* Header */}
-      <div className="flex items-center gap-4 p-4 border-b border-zinc-800 bg-zinc-900/50">
-        <button
-          onClick={() => router.back()}
-          className="text-zinc-400 hover:text-zinc-100"
-        >
-          <ChevronLeft size={24} />
-        </button>
-        <h1
-          style={{ fontFamily: "var(--font-heading)", color: "#FF6B00" }}
-          className="text-xl font-bold tracking-wider"
-        >
-          ADMIN
-        </h1>
-        <span className="text-zinc-500 text-sm ml-auto flex items-center gap-1">
-          <Settings size={14} /> {currentPlayer?.name}
-        </span>
-      </div>
+      <header className="border-b border-white/10 px-6 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => router.back()}
+            className="tech-label hover:text-white transition-colors"
+          >
+            ← VOLVER
+          </button>
+          <span className="text-white/20 text-xs">|</span>
+          <span className="tech-label" style={{ color: "var(--accent-cyan)" }}>▸ ADMIN</span>
+        </div>
+        {currentPlayer && (
+          <span className="tech-label">
+            {currentPlayer.avatarEmoji} <span style={{ color: currentPlayer.colorHex }}>{currentPlayer.name.toUpperCase()}</span>
+          </span>
+        )}
+      </header>
 
       {/* Tabs */}
-      <div className="flex gap-1 p-4 max-w-2xl mx-auto">
+      <div className="flex gap-px p-6 max-w-2xl mx-auto">
         {(["players", "games"] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`flex-1 py-2 rounded-lg text-sm font-bold tracking-widest uppercase transition-all ${
-              tab === t
-                ? "bg-orange-500 text-zinc-950"
-                : "bg-zinc-900 text-zinc-400 hover:text-zinc-200 border border-zinc-800"
-            }`}
+            className="flex-1 py-2.5 font-bold text-xs tracking-widest uppercase transition-all"
+            style={{
+              background: tab === t ? "var(--accent-cyan)" : "transparent",
+              color: tab === t ? "#000" : "rgba(255,255,255,0.3)",
+              border: `1px solid ${tab === t ? "var(--accent-cyan)" : "rgba(255,255,255,0.1)"}`,
+            }}
           >
-            {t === "players" ? "👤 Jugadores" : "🎮 Juegos"}
+            {t === "players" ? "JUGADORES" : "JUEGOS"}
           </button>
         ))}
       </div>
 
-      <div className="max-w-2xl mx-auto px-4">
+      <div className="max-w-2xl mx-auto px-6">
+
         {/* Players Tab */}
         {tab === "players" && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col gap-2">
             {players.map((player) => (
               <div
                 key={player.id}
-                className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-4"
+                className="border border-white/8 p-4"
               >
                 {editingPlayer === player.id ? (
-                  <div className="space-y-3">
+                  <div className="flex flex-col gap-3">
                     <div className="flex gap-3">
                       <input
                         type="text"
                         value={playerEdits.name ?? player.name}
                         onChange={(e) => setPlayerEdits((p) => ({ ...p, name: e.target.value }))}
-                        className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-orange-500"
+                        className="flex-1 bg-black border border-white/15 px-3 py-2 text-sm text-white focus:outline-none focus:border-[var(--accent-cyan)] terminal transition-colors"
                         placeholder="Nombre"
                       />
                       <input
                         type="text"
                         value={playerEdits.avatarEmoji ?? player.avatarEmoji}
                         onChange={(e) => setPlayerEdits((p) => ({ ...p, avatarEmoji: e.target.value }))}
-                        className="w-16 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-center focus:outline-none focus:border-orange-500"
+                        className="w-14 bg-black border border-white/15 px-2 py-2 text-sm text-center focus:outline-none focus:border-[var(--accent-cyan)] transition-colors"
                         placeholder="Emoji"
                       />
                     </div>
@@ -139,53 +149,52 @@ export default function AdminPage() {
                         type="text"
                         value={playerEdits.colorHex ?? player.colorHex}
                         onChange={(e) => setPlayerEdits((p) => ({ ...p, colorHex: e.target.value }))}
-                        className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-orange-500"
-                        placeholder="#FF6B00"
+                        className="flex-1 bg-black border border-white/15 px-3 py-2 text-sm focus:outline-none focus:border-[var(--accent-cyan)] terminal transition-colors"
+                        placeholder="#00f0ff"
+                        style={{ color: playerEdits.colorHex ?? player.colorHex }}
                       />
                       <input
                         type="password"
                         value={playerEdits.pin ?? ""}
                         onChange={(e) => setPlayerEdits((p) => ({ ...p, pin: e.target.value || null }))}
-                        className="w-28 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-orange-500"
-                        placeholder="PIN (4 digs)"
+                        className="w-28 bg-black border border-white/15 px-3 py-2 text-sm focus:outline-none focus:border-[var(--accent-cyan)] terminal transition-colors text-white"
+                        placeholder="PIN (4)"
                         maxLength={4}
                       />
                     </div>
                     <div className="flex gap-2 justify-end">
                       <button
                         onClick={() => { setEditingPlayer(null); setPlayerEdits({}); }}
-                        className="p-2 text-zinc-400 hover:text-zinc-200 border border-zinc-700 rounded-lg"
+                        className="p-2 border border-white/10 text-white/30 hover:text-white hover:border-white/30 transition-colors"
                       >
-                        <X size={16} />
+                        <X size={14} />
                       </button>
                       <button
                         onClick={() => savePlayer(player.id)}
-                        className="p-2 text-green-400 border border-green-500 rounded-lg hover:bg-green-500/10"
+                        className="p-2 border transition-colors"
+                        style={{ borderColor: "var(--accent-cyan)", color: "var(--accent-cyan)" }}
                       >
-                        <Check size={16} />
+                        <Check size={14} />
                       </button>
                     </div>
                   </div>
                 ) : (
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl">{player.avatarEmoji}</span>
+                    <span className="text-xl">{player.avatarEmoji}</span>
                     <div className="flex-1">
-                      <p className="font-semibold" style={{ color: player.colorHex }}>
-                        {player.name}
+                      <p className="terminal text-sm font-bold" style={{ color: player.colorHex }}>
+                        {player.name.toUpperCase()}
                       </p>
-                      <p className="text-xs text-zinc-500">
-                        {player.colorHex} • {player.pin ? "🔒 PIN configurado" : "Sin PIN"}
-                        {!player.isActive && " • Inactivo"}
+                      <p className="tech-label mt-0.5">
+                        {player.colorHex} · {player.pin ? "🔒 PIN" : "SIN PIN"}
+                        {!player.isActive ? " · INACTIVO" : ""}
                       </p>
                     </div>
                     <button
-                      onClick={() => {
-                        setEditingPlayer(player.id);
-                        setPlayerEdits({});
-                      }}
-                      className="p-2 text-zinc-400 hover:text-zinc-200 transition-colors"
+                      onClick={() => { setEditingPlayer(player.id); setPlayerEdits({}); }}
+                      className="p-2 text-white/20 hover:text-white transition-colors"
                     >
-                      <Edit size={16} />
+                      <Edit size={14} />
                     </button>
                   </div>
                 )}
@@ -196,65 +205,69 @@ export default function AdminPage() {
 
         {/* Games Tab */}
         {tab === "games" && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col gap-1">
             {games.map((game) => (
               <div
                 key={game.id}
-                className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-4"
+                className="border border-white/8 px-4 py-3"
               >
                 {editingGame === game.id ? (
-                  <div className="space-y-3">
-                    <p className="font-semibold text-orange-400">{game.name}</p>
-                    <div className="grid grid-cols-2 gap-2">
-                      {(["isAvailable1v1", "isAvailableFFA", "isAvailable2v2", "isBO3Preferred", "isLongGame"] as const).map((flag) => (
-                        <label key={flag} className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={gameEdits[flag] !== undefined ? gameEdits[flag] : game[flag]}
-                            onChange={(e) => setGameEdits((g) => ({ ...g, [flag]: e.target.checked }))}
-                            className="w-4 h-4 rounded accent-orange-500"
-                          />
-                          <span className="text-xs text-zinc-400">
-                            {flag.replace("isAvailable", "").replace("is", "").toLowerCase()}
-                          </span>
-                        </label>
-                      ))}
+                  <div className="flex flex-col gap-3">
+                    <p className="terminal text-sm font-bold" style={{ color: "var(--accent-cyan)" }}>
+                      {game.name.toUpperCase()}
+                    </p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {(["isAvailable1v1", "isAvailableFFA", "isAvailable2v2", "isBO3Preferred", "isLongGame"] as const).map((flag) => {
+                        const active = gameEdits[flag] !== undefined ? gameEdits[flag] : game[flag];
+                        return (
+                          <button
+                            key={flag}
+                            onClick={() => setGameEdits((g) => ({ ...g, [flag]: !active }))}
+                            className="py-1.5 text-xs font-bold tracking-wider border transition-all"
+                            style={{
+                              borderColor: active ? "var(--accent-cyan)" : "rgba(255,255,255,0.08)",
+                              background: active ? "rgba(0,240,255,0.08)" : "transparent",
+                              color: active ? "var(--accent-cyan)" : "rgba(255,255,255,0.25)",
+                            }}
+                          >
+                            {FLAG_LABELS[flag]}
+                          </button>
+                        );
+                      })}
                     </div>
                     <div className="flex gap-2 justify-end">
                       <button
                         onClick={() => { setEditingGame(null); setGameEdits({}); }}
-                        className="p-2 text-zinc-400 hover:text-zinc-200 border border-zinc-700 rounded-lg"
+                        className="p-2 border border-white/10 text-white/30 hover:text-white hover:border-white/30 transition-colors"
                       >
-                        <X size={16} />
+                        <X size={14} />
                       </button>
                       <button
                         onClick={() => saveGame(game.id)}
-                        className="p-2 text-green-400 border border-green-500 rounded-lg hover:bg-green-500/10"
+                        className="p-2 border transition-colors"
+                        style={{ borderColor: "var(--accent-cyan)", color: "var(--accent-cyan)" }}
                       >
-                        <Check size={16} />
+                        <Check size={14} />
                       </button>
                     </div>
                   </div>
                 ) : (
                   <div className="flex items-center gap-3">
-                    <div className="flex-1">
-                      <p className="font-medium text-sm text-zinc-200">{game.name}</p>
-                      <div className="flex gap-2 mt-1 flex-wrap">
-                        {game.isAvailable1v1 && <span className="text-xs bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded">1v1</span>}
-                        {game.isAvailableFFA && <span className="text-xs bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded">FFA</span>}
-                        {game.isAvailable2v2 && <span className="text-xs bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded">2v2</span>}
-                        {game.isBO3Preferred && <span className="text-xs bg-zinc-800 text-orange-500 px-1.5 py-0.5 rounded">BO3</span>}
-                        {game.isLongGame && <span className="text-xs bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded">Largo</span>}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-white/80 truncate">{game.name}</p>
+                      <div className="flex gap-1.5 mt-1 flex-wrap">
+                        {game.isAvailable1v1 && <span className="tech-label border border-white/10 px-1.5 py-0.5">1V1</span>}
+                        {game.isAvailableFFA && <span className="tech-label border border-white/10 px-1.5 py-0.5">FFA</span>}
+                        {game.isAvailable2v2 && <span className="tech-label border border-white/10 px-1.5 py-0.5">2V2</span>}
+                        {game.isBO3Preferred && <span className="tech-label border px-1.5 py-0.5" style={{ borderColor: "rgba(0,240,255,0.3)", color: "var(--accent-cyan)" }}>BO3</span>}
+                        {game.isLongGame && <span className="tech-label px-1.5 py-0.5 text-amber-500">LARGO</span>}
                       </div>
                     </div>
                     <button
-                      onClick={() => {
-                        setEditingGame(game.id);
-                        setGameEdits({});
-                      }}
-                      className="p-2 text-zinc-400 hover:text-zinc-200 transition-colors"
+                      onClick={() => { setEditingGame(game.id); setGameEdits({}); }}
+                      className="p-2 text-white/20 hover:text-white transition-colors"
                     >
-                      <Edit size={16} />
+                      <Edit size={14} />
                     </button>
                   </div>
                 )}
